@@ -1,3 +1,13 @@
+/**
+Week1 - Baskc External Stages
+https://frostyfriday.org/blog/2022/07/14/week-1/
+
+世界有数のホワイト企業であるFrostyFriday株式会社には、分析に使用するcsvデータがS3バケットに配置されています。
+今回は、外部STAGEを作成し、この分析用csvデータをテーブルへロードすることです。
+
+S3バケットのURIは、s3://frostyfridaychallenges/challenge_1/　になります。
+**/
+
 -- データベースを作ります
 create database frosty_friday;
 
