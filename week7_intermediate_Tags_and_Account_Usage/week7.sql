@@ -22,7 +22,12 @@ SECURITY_CLASS, Level Super Secret A++++++, 0125ded8-0000-223e-0000-914900053246
 
 **/
 
+------- 回答
 use role accountadmin;
+use warehouse compute_wh;
+-- database, schemaは設定しなくても今回は良さそうではある
+-- use database ff_week_7;
+-- use schema public;
 
 with object_ids as (
     select 
@@ -44,35 +49,19 @@ query_history as (
         snowflake.account_usage.query_history
 )
 -- select distinct object_id from object_ids limit 10;
-/**
-, ng_use_filter as (
-    select
-        query_id
-        , base_objects_accessed
-        , filter(base_objects_accessed, a -> a:objectId in (select distinct object_id from object_ids)) as objectId_1
-    from 
-        snowflake.account_usage.access_history 
-    where
-        array_size(objectId_1) > 0
-    order by
-        query_start_time desc
-    limit 100
-    -- エラー 300010のため、処理は中止されました：1094633624。インシデント 7573493。 
-    -- 残念ながらFILTERには、サブクエリはまだ使えなさそう
-)
-**/
+
 , accessed_tables as (
 	select 
-        s.*
-        , l.value
+        access_history.*
+        , flattened_base_objects_accessed.value
 	from
-        snowflake.account_usage.access_history as s
-		, lateral flatten(base_objects_accessed) as l
+        snowflake.account_usage.access_history
+		, lateral flatten(base_objects_accessed) as flattened_base_objects_accessed
 	WHERE
         exists (
             select 1 from object_ids 
             where 
-                l.value['objectId']::number = object_ids.object_id)
+                flattened_base_objects_accessed.value['objectId']::number = object_ids.object_id)
 )
 -- select * from accessed_tables;
 , potential_leaks as (
@@ -97,7 +86,7 @@ select
 from 
     potential_leaks
     left outer join object_ids
-    on object_id = object_ids.object_id
+        on object_id = object_ids.object_id
 )
 select 
     tag_name
@@ -109,3 +98,68 @@ from
     add_tag_info
 group by all
 ;
+
+select 
+    tag_name
+    , tag_value
+    , object_id
+from
+    snowflake.account_usage.tag_references
+where
+    tag_value = 'Level Super Secret A+++++++'
+;
+--　うまくいかなかった解法（Lambda式FILTERをつかってみた）
+-- https://docs.snowflake.com/en/sql-reference/functions/filter
+/**
+SELECT FILTER(
+  [
+    {'name':'Pat', 'value': 50},
+    {'name':'Terry', 'value': 75},
+    {'name':'Dana', 'value': 25}
+  ],
+  a -> a:value >= 50) AS "Filter >= 50";
+**/
+select
+    query_id
+    , base_objects_accessed
+    , flattened_base_objects_accessed.value['objectId']::string  as object_id
+    , flattened_base_objects_accessed.value['objectName']::string  as object_name
+from 
+    snowflake.account_usage.access_history
+    , lateral flatten(base_objects_accessed) as flattened_base_objects_accessed
+where
+    array_size(filter(base_objects_accessed, a -> a:objectId in (19483, 19487))) > 0
+order by
+    query_start_time desc
+    limit 100
+;
+
+-- うまくいかなかった
+with object_ids as (
+    select 
+        tag_name
+        , tag_value
+        , object_id
+    from
+        snowflake.account_usage.tag_references
+    where
+        tag_value = 'Level Super Secret A+++++++'
+)
+select
+    query_id
+    , base_objects_accessed
+    , flattened_base_objects_accessed.value['objectId']::string  as object_id
+    , flattened_base_objects_accessed.value['objectName']::string  as object_name
+from 
+    snowflake.account_usage.access_history
+    , lateral flatten(base_objects_accessed) as flattened_base_objects_accessed
+where
+    array_size(filter(base_objects_accessed, a -> a:objectId in (select distinct object_id from object_ids))) > 0
+order by
+    query_start_time desc
+    limit 100
+;
+-- SQL実行の内部エラー
+-- エラー 300010のため、処理は中止されました：1094633624。インシデント 7573493。 
+-- 残念ながらFILTERには、サブクエリはまだ使えなさそう。
+
