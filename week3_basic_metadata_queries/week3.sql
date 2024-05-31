@@ -24,3 +24,82 @@ https://frostyfriday.org/wp-content/uploads/2022/07/result-2048x218.png
 
 
 **/
+
+use database frosty_friday;
+use schema public;
+
+create or replace stage week3_ext_stage
+  URL='s3://frostyfridaychallenges/challenge_3/';
+
+list @week3_ext_stage;
+/**
+s3://frostyfridaychallenges/challenge_3/keywords.csv
+s3://frostyfridaychallenges/challenge_3/week3_data1.csv
+s3://frostyfridaychallenges/challenge_3/week3_data2.csv
+s3://frostyfridaychallenges/challenge_3/week3_data2_stacy_forgot_to_upload.csv
+s3://frostyfridaychallenges/challenge_3/week3_data3.csv
+s3://frostyfridaychallenges/challenge_3/week3_data4.csv
+s3://frostyfridaychallenges/challenge_3/week3_data4_extra.csv
+s3://frostyfridaychallenges/challenge_3/week3_data5.csv
+s3://frostyfridaychallenges/challenge_3/week3_data5_added.csv
+**/
+select $1, $2, $3, $4 from @week3_ext_stage/keywords.csv;
+
+select 
+    $1
+    , $2
+    , $3
+    , metadata$filename 
+    , metadata$file_row_number
+from 
+    @week3_ext_stage/keywords.csv
+;
+
+create or replace table week3_keyword_table (
+    keyword text
+    , added_by text
+    , nonsense number
+    , file_name text
+    , file_row_number number
+)
+;
+
+
+create or replace file format week3_csv_format
+  type = CSV
+  parse_header = true
+;
+
+copy into week3_keyword_table ( keyword, added_by, nonsense, file_name,  file_row_number)
+from 
+    ( 
+        select 
+            $1 
+            , $2
+            , $3
+            , metadata$filename 
+            , metadata$file_row_number
+        from 
+            @week3_ext_stage/keywords.csv
+    )
+FILE_FORMAT = (FORMAT_NAME = 'week3_csv_format');
+
+
+select 
+    $1
+    , $2
+    , $3
+    , metadata$filename 
+    , metadata$file_row_number
+from 
+    @week3_ext_stage/week3_data1.csv
+;
+select 
+    $1
+    , $2
+    , $3
+    , metadata$filename 
+    , metadata$file_row_number
+from 
+    @week3_ext_stage/week3_data2.csv
+;
