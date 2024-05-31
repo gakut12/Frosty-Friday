@@ -296,3 +296,7 @@ as
 ;
 truncate table week10_tbl;
 call dynamic_warehouse_data_load('ff_week_10_frosty_stage_for_inferschema', 'week10_tbl');
+
+
+-- 確認
+select query_id, query_text, warehouse_name from table(information_schema.query_history_by_session()) where startswith(query_text, 'copy into week10_tbl from') order by start_time desc limit 100;
