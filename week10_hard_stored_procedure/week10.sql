@@ -11,19 +11,22 @@ Frosty Consultingでは、ステージからデータを手動かつ動的にロ
 **/
 
 use role sysadmin;
-create database ff_week_10;
+use warehouse gaku_wh;
+create or replace database ff_week_10;
 use database ff_week_10;
 
+--
 create or replace procedure stored_procedure_template(var1 string)
     returns array
     language sql
-    execute as caller
+    execute as caller -- owner
 as
     $$
         declare
             log_array array default ARRAY_CONSTRUCT();
         begin
             log_array := array_append(:log_array, :var1);
+            log_array := array_append(:log_array, 'frosy friday night fever');
             return log_array;
             -- return var1
         end;
@@ -49,7 +52,6 @@ create or replace table week10_tbl
     date_time datetime,
     trans_amount double
 );
--- TODO infer_schemaで、Metadataもいれる形で実装する。csvも対応済み
 
 -- create file format
 create or replace file format week10_csv_format
@@ -71,6 +73,13 @@ select
     , "size"
 from 
     table(result_scan(last_query_id()));
+
+list @week_10_frosty_stage;
+select
+    $1 as name
+    , $2 as size
+from 
+    table(result_scan(last_query_id()));    
 
 create or replace procedure dynamic_warehouse_data_load(stage_name string, table_name string)
     returns array
@@ -122,6 +131,7 @@ as
 
             let loaded_total number;
             select count(*) into :loaded_total from week10_tbl;
+            -- select count(*) from week10_tbl;
             log_array := array_append(:log_array, 'loaded_total :' || :loaded_total );
             
             return log_array;
@@ -132,7 +142,7 @@ call dynamic_warehouse_data_load('public', 'week10_tbl');
 
 list @week_10_frosty_stage;
 select $1 as name , $2 as size from table(result_scan(last_query_id()));
-
+-- s3://frostyfridaychallenges/challenge_10/2022-07-01.csv
 select split_part('s3://frostyfridaychallenges/challenge_10/2022-07-01.csv', '/', -1) as hoge;
 
 show stages like 'week_10_frosty_stage';
@@ -162,7 +172,6 @@ as
                     use warehouse my_small_wh;
                 end if;
                 let sql string := 'copy into ' || :table_name || ' from @' || :stage_name || ' files = (''' || split_part(:name, '/', -1) || ''' )';
-                -- TODO infer_schema、include_metadata を使う形で作り直す
 --                log_array := array_append(:log_array, 'sql :' || :sql );
                 execute immediate :sql;
             end for;

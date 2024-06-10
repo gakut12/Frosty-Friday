@@ -254,7 +254,7 @@ Number of columns in file (2) does not match that of the corresponding table (5)
 **/
 
 create or replace procedure dynamic_warehouse_data_load(stage_name string, table_name string)
-    returns array
+    returns table(value string)
     language sql
     execute as caller
 as
@@ -290,7 +290,8 @@ as
             select count(*) into :loaded_total from week10_tbl;
             log_array := array_append(:log_array, 'loaded_total :' || :loaded_total );
 
-            return log_array;
+            let rs resultset := (select value::string as value from table(flatten(input => :log_array)));
+            return table(rs);
         end;
     $$
 ;
