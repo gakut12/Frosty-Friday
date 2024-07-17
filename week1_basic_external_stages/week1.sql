@@ -14,7 +14,7 @@ create database frosty_friday;
 -- SYSADMINの方が妥当かも
 use role accountadmin;
 
-create or replace stag week_ext_stage
+create or replace stage week_ext_stage
   URL='s3://frostyfridaychallenges/challenge_1/';
 
 list @week_ext_stage;
