@@ -73,21 +73,9 @@ INSERT INTO src (pirate_name, booty_amount, rank, ship_name) VALUES
 -- https://docs.snowflake.com/en/sql-reference/sql/insert-multi-table
 
 -- ここから実装
-CREATE OR REPLACE TABLE t1 (
-    pirate_name STRING,
-    booty_amount NUMBER,
-    rank STRING,
-    ship_name STRING
-);
-
-CREATE OR REPLACE TABLE t2 (
-    pirate_name STRING,
-    booty_amount NUMBER,
-    rank STRING,
-    ship_name STRING
-);
 
 select * from src;
+
 -- 条件1 booty_amount が 700以上
 select * from src where booty_amount >= 700;
 
