@@ -186,3 +186,57 @@ select * from rename_colums
         pivoting
 )
 select * from final;
+
+-- 解法③-1 unpivotを使いたくない　https://zenn.dev/indigo13love/articles/971cdb3b893590
+-- 動的UNPIVOT（object_construct使っての実装）＋動的PIVOT（Snowflake提供機能）
+-- ちょっとリファクタリング（ hero_nameの重複をへらして、SQLを更にシンプルに）
+
+-- 動的UNPIVOT（object_constructを利用）
+select * from hero_powers;
+select object_construct(* exclude hero_name) from hero_powers;
+
+
+with queries as (
+ select 
+        hero_name,
+        object_construct(* exclude hero_name) line
+    from 
+        hero_powers
+)
+-- select * from  queries;
+, unpivoting as (
+    select
+        queries.hero_name
+        , f.*
+    from queries, lateral flatten(queries.line) f
+)
+-- select * from unpivoting;
+, rename_colums as (
+    select 
+        hero_name, 
+        key as power, 
+        case
+            when value = '++' then 'MAIN_POWER'
+            when value = '+' then 'SECONDARY_POWER'
+            else null
+         end as categorized_power_level 
+    from 
+        unpivoting
+    where 
+        value != '-'
+    ) 
+-- select * from rename_colums;
+, pivoting as (
+select * from rename_colums
+    pivot ( max(power) for categorized_power_level in ( any order by categorized_power_level))
+)
+-- select * from pivoting;
+, final as (
+    select
+        hero_name
+        , "'MAIN_POWER'" as MAIN_POWER
+        , "'SECONDARY_POWER'" as SECONDARY_POWER
+    from
+        pivoting
+)
+select * from final;
