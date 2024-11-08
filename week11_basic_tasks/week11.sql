@@ -20,7 +20,7 @@ use schema week11;
 -- Create the stage that points at the data.
 create stage week_11_frosty_stage
     url = 's3://frostyfridaychallenges/challenge_11/'
-    file_format = <insert_csv_file_format;
+    file_format = insert_csv_file_format;
 
 -- Create the table as a CTAS statement.
 create or replace table frosty_friday.challenges.week11 as

@@ -129,12 +129,14 @@ AS (val float) RETURNS float ->
   END;
 
 -- unset (masking policyを修正する時は必要)
+-- if masking policy change, require "alter table unset"
 alter table customer_data modify 
     column email unset masking policy 
     , column CREDIT_CARD_NUMBER unset masking policy 
     , column ACCOUNT_BALANCE unset masking policy 
 ;
 
+-- set masking policy 
 alter table customer_data modify 
     column email set masking policy mask_email
     , column CREDIT_CARD_NUMBER set masking policy mask_credit_card_number
