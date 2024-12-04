@@ -14,6 +14,20 @@ select '&snowshell' as snowshell;
 !set variable_substitution=true
 select '&snowshell' as snowshell;
 
+!define database_name=ff_30_testing
+!define role_name=ff_30_dev_role
+
+```
+se role securityadmin;
+-- dev_role should be able to create and query all (future) tables, views, and schemas in every database, except for changing anything in the security schemas.
+grant usage, create schema on database &database_name to role &role_name;
+grant usage, create table, create view on schema &database_name.public to role &role_name;
+grant select on future tables in schema &database_name.public to role &role_name;
+grant select on all tables in schema &database_name.public to role &role_name;
+grant select on future views in schema &database_name.public to role &role_name;
+grant select on all views in schema &database_name.public to role &role_name;
+```
+
 
 --　フェデレーション（SSO）認証で動かす場合は、--authenticator externalbrowser
 -- 認証が始まるまで、結構時間がかかりますね・・・
