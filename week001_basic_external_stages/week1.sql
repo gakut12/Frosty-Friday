@@ -8,11 +8,13 @@ https://frostyfriday.org/blog/2022/07/14/week-1/
 S3バケットのURIは、s3://frostyfridaychallenges/challenge_1/　になります。
 **/
 
--- データベースを作ります
-create database frosty_friday;
+use role sysadmin;
+use warehouse gaku_wh;
 
--- SYSADMINの方が妥当かも
-use role accountadmin;
+-- データベースを作ります
+create database gaku_frosty_friday_db;
+
+create schema week001;
 
 create or replace stage week_ext_stage
   URL='s3://frostyfridaychallenges/challenge_1/';
@@ -78,6 +80,7 @@ with source as (
         week1_table 
     where
         result is not null
+        and result != 'totally_empty'
 )
 
 , final as (
