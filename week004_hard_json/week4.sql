@@ -19,15 +19,15 @@ https://frostyfriday.org/wp-content/uploads/2022/07/Screenshot-2022-07-14-at-20.
 **/
 
 use role sysadmin;
-use warehouse compute_wh;
+use warehouse gaku_wh;
 use database frosty_friday;
-use schema public;
+create or replace schema week4;
 
--- stage を作ります
 create or replace stage week4_ext_stage
   URL='s3://frostyfridaychallenges/challenge_4/';
 
-list @week4_ext_stage;
+ls @week4_ext_stage;
+
 
 create or replace file format week4_json_file_format
     type = JSON
@@ -40,14 +40,22 @@ from @week4_ext_stage/Spanish_Monarchs.json
 (file_format => 'week4_json_file_format')
 ;
 
+create or replace file format week4_json_file_format_non_strip
+    type = JSON
+--    STRIP_OUTER_ARRAY = TRUE -- JSON パーサーに、外側の括弧（つまり [ ]）を削除するように指示するブール値。
+;
+
+select 
+    $1::variant as v
+from @week4_ext_stage/Spanish_Monarchs.json
+(file_format => 'week4_json_file_format_non_strip')
+;
 
 create or replace table week4_raw (
     v variant
     , file_name string
     , file_row_number number
 );
-
-desc table week4_raw;
 
 copy into week4_raw 
 from (
@@ -61,38 +69,23 @@ from (
 )
 ;
 
-select * from week4_raw;
-/**
-{
-    "Era": "Pre-Transition",
-    "Houses": [
-      {
-        "House": "Austria",
-        "Monarchs": [
-          {
-            "Age at Time of Death": "71 years",
-            "Birth": "1527-05-21",
-            "Burial Place": "Cripta Real del Monasterio de El Escorial",
-            "Consort\\/Queen Consort": [
-              "Maria I de Inglaterra",
-              "Isabel de Valois",
-              "Ana de Austria"
-            ],
-            "Death": "1598-09-13",
-            "Duration": "42 years and 240 days",
-            "End of Reign": "1598-09-13",
-            "Name": "Felipe II",
-            "Nickname": "el Prudente",
-            "Place of Birth": "Valladolid",
-            "Place of Death": "San Lorenzo de El Escorial",
-            "Start of Reign": "1556-01-16"
-          },
-          {
-            "Age at Time of Death": "42 years",
-            （以下繰り返し）
+select v from week4_raw;
 
-このファイルの入れ子構造を考慮に入れて、半構造化へのQueryを組み上げて、ばらす
-**/
+select 
+    value
+from 
+    week4_raw
+    , LATERAL FLATTEN(v:"Houses") as h
+;
+
+select 
+    h.value as h_value
+    , m.value as m_value
+from 
+    week4_raw
+    , LATERAL FLATTEN(v:"Houses") as h
+    , LATERAL FLATTEN(h.value:"Monarchs") as m
+;
 
 create or replace view spanish_monarches_view
 as
@@ -124,24 +117,3 @@ from
 ;
 
 select * from spanish_monarches_view;
-
----------------------------------------------------------------------------
--- 解法②　infer_schema をつかってみる (できなかった)
----------------------------------------------------------------------------
-select *
-from table (
-    infer_schema (
-        location=>'@week4_ext_stage/Spanish_Monarchs.json'
-        , file_format=>'week4_json_file_format'
-    )
-);
-
-/**
-COLUMN_NAME	TYPE	NULLABLE	EXPRESSION	FILENAMES	ORDER_ID
-Era	TEXT	TRUE	$1:Era::TEXT	challenge_4/Spanish_Monarchs.json	0
-Houses	ARRAY	TRUE	$1:Houses::ARRAY	challenge_4/Spanish_Monarchs.json	1
-
-INFER_SCHEMAでJSONのカラム推定を使ってみたが、入れ子構造のカラム（LATERAL FLATTENをつかわなければできない）の
-検出は難しそうだった
-**/
-
