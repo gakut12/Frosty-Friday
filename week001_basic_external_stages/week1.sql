@@ -16,10 +16,10 @@ create database gaku_frosty_friday_db;
 
 create schema week001;
 
-create or replace stage week_ext_stage
+create or replace stage week001_ext_stage
   URL='s3://frostyfridaychallenges/challenge_1/';
 
-list @week_ext_stage;
+list @week001_ext_stage;
 
 select 
     $1
@@ -28,7 +28,7 @@ select
     , metadata$filename 
     , metadata$file_row_number
 from 
-    @week_ext_stage
+    @week001_ext_stage
 ;
 
 create or replace table week1_table (
@@ -60,7 +60,7 @@ from
             , metadata$filename 
             , metadata$file_row_number
         from 
-            @week_ext_stage
+            @week001_ext_stage
     )
 FILE_FORMAT = (FORMAT_NAME = 'week1_csv_format');
 ;
