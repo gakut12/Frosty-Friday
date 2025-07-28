@@ -1,0 +1,18 @@
+# This is a project definition file, a required component if you intend to use Snowflake CLI in a project directory such as this template.
+
+definition_version: 2
+entities:
+  gaku_ff_week062_package:
+    type: application package
+    stage: stage_content.gaku_ff_week062_stage
+    manifest: app/manifest.yml
+    identifier: gaku_ff_week062_package
+    artifacts:
+      - src: app/*
+        dest: ./
+      - streamlit/hello_snowflake.py
+  gaku_ff_week062_app:
+      type: application
+      from:
+         target: gaku_ff_week062_package
+      debug: false
