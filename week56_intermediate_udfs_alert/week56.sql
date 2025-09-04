@@ -154,7 +154,7 @@ group by reaction2;
 
 CREATE OR REPLACE SECRET my_slack_webhook_secret
   TYPE = GENERIC_STRING
-  SECRET_STRING = 'T6F7G8PLG/B066XUFNP88/K01lKYB6njBR3TrTeBmRnoTH';
+  SECRET_STRING = 'T*****/B***********/K************************';
 
 CREATE OR REPLACE NOTIFICATION INTEGRATION my_slack_webhook_int
   TYPE=WEBHOOK
