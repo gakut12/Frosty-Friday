@@ -88,5 +88,14 @@ with source as (
         listagg(result,' ') WITHIN GROUP (ORDER BY filename,  file_row_number )  as answer
     from source
 )
--- select * from source;
 select * from final;
+
+-- use infer_schema
+-- 1行目をヘッダとして、スキーマを推測してテーブルを作成
+
+create or replace file format week3_csv_format_2
+  type = CSV
+  parse_header = true
+  null_if = ('NULL', 'null')
+  empty_field_as_null = true
+;
