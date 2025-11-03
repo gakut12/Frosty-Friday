@@ -1,2 +1,19 @@
 Frosty-Friday.code-workspace
-.DS_Store
+**/.DS_Store
+**/*.log
+**/.env
+**/.envrc
+**/Makefile/*
+**/__pycache__/*
+**/.venv
+
+# editor
+**/.vscode/*
+**/.idea/*
+
+# dbt
+venv/
+logs/
+.user.yml
+target/
+dbt_packages/

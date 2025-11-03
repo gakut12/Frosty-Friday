@@ -1,0 +1,11 @@
+order_id,customer_name,order_date,total_amount,order_details
+1,Hank,20250921,3207.84,Service Plan B
+2,Frank,20250917,4722.48,Custom Order H
+3,Frank,20250929,2405.65,Custom Order H
+4,Charlie,20250924,475.67,Custom Order H
+5,Eve,20250925,4371.22,Custom Order H
+6,Bob,20250924,4571.52,Custom Order H
+7,Charlie,20250914,1822.43,Package I
+8,Grace,20250903,1262.77,Custom Order H
+9,Ivy,20250903,4842.91,Bundle C
+10,Ivy,20250911,2474.94,Subscription D
